@@ -11,7 +11,7 @@ repositories {
 }
 
 application {
-    mainClassName = 'com.example.sample.Main'
+    mainClassName = 'com.example.sample.Main' // This will NOT work because we don't have any classes under src/main/java
 }
 
 jar {
@@ -21,8 +21,12 @@ jar {
 }
 
 dependencies {
+    // JUnit
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
+
+    // Appium Client
+    testImplementation 'io.appium:java-client:8.1.1'
 }
 
 test {
