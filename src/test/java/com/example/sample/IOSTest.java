@@ -1,11 +1,13 @@
 package com.example.sample;
 
-
-import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.remote.AndroidMobileCapabilityType;
+import io.appium.java_client.AppiumBy;
+import io.appium.java_client.ios.IOSDriver;
 import io.appium.java_client.remote.MobileCapabilityType;
 import io.appium.java_client.remote.MobilePlatform;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -17,36 +19,30 @@ import java.net.URL;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class AndroidTest {
-    private AndroidDriver driver;
+public class IOSTest {
+    private IOSDriver driver;
 
     @BeforeEach
     public void setUp() throws MalformedURLException {
         // Please inject these env vars when you run these tests
-        String apkFilePath = System.getenv("ANDROID_APK_FILE_PATH"); // Relative path to the APK file
-        // String apkFilePath = "binary/android/app-release.apk";
-        String packageName = System.getenv("ANDROID_PACKAGE_NAME"); // App package name described in AndroidManifest.xml
-        // String packageName = "com.example.webviewlinksample";
-        String launchActivityName = System.getenv("ANDROID_LAUNCH_ACTIVITY_NAME"); // Activity name where App is launched
-        // String launchActivityName = ".MainActivity";
+        String appFilePath = System.getenv("IOS_APP_FILE_PATH"); // Relative path to the .app directory
+        // String appFilePath = "binary/ios/webviewlinksample.app";
 
-        File app = new File(apkFilePath);
+        File app = new File(appFilePath);
 
         // Ref: https://appium.io/docs/en/writing-running-appium/caps/
         //
-        // When you run the tests on Android Emulator,
-        // you need to make sure there is a running emulator whose OS is the same as "appium:platformVersion"
-        // $ $ANDROID_HOME/platform-tools/adb devices -l
+        // When you run the tests on iOS Simulator,
+        // you need to choose the OS/device which is listed in the output of
+        // $ xcrun xctrace list devices
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "UiAutomator2");
-        desiredCapabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, MobilePlatform.ANDROID);
-        desiredCapabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "12");
-        desiredCapabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "Android Emulator");
+        desiredCapabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "XCUITest");
+        desiredCapabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, MobilePlatform.IOS);
+        desiredCapabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "15.5");
+        desiredCapabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "iPhone 8");
         desiredCapabilities.setCapability(MobileCapabilityType.APP, app.getAbsolutePath());
-        desiredCapabilities.setCapability(AndroidMobileCapabilityType.APP_PACKAGE, packageName);
-        desiredCapabilities.setCapability(AndroidMobileCapabilityType.APP_ACTIVITY, launchActivityName);
 
-        driver = new AndroidDriver(new URL("http://0.0.0.0:4723/wd/hub"), desiredCapabilities);
+        driver = new IOSDriver(new URL("http://0.0.0.0:4723/wd/hub"), desiredCapabilities);
     }
 
     @AfterEach
@@ -62,9 +58,11 @@ public class AndroidTest {
         String expected = "WebViewLink Sample";
 
         // Fetch the title of the toolbar
-        // Note that androidx.appcompat.widget.Toolbar implicitly creates an element of android.widget.TextView as a child
-        WebElement toolbar = driver.findElement(By.id("toolbar")).findElement(By.className("android.widget.TextView"));
-        String actual = toolbar.getText();
+        // Note that the title of NavigationBar will automatically be the same as its Accessibility ID and we don't have a control to change it from the code
+        WebElement toolbar = driver.findElement(new AppiumBy.ByAccessibilityId("WebViewLink Sample"));
+
+        // In case of iOS, toolbar (= NavigationBarTitle) is contained "name" attribute
+        String actual = toolbar.getAttribute("name");
 
         assertEquals(expected, actual);
     }
@@ -81,8 +79,9 @@ public class AndroidTest {
 
         assertEquals(expectedBeforeInput, actualBeforeInput);
 
-        // Search button in the SearchView
-        WebElement searchButton = driver.findElement(By.id("searchbar")).findElement(By.className("android.widget.ImageView"));
+        // Search button
+        // TODO: Get the locator in a more proper way
+        WebElement searchButton = driver.findElement(By.xpath("//XCUIElementTypeTextField[@name=\"searchbar\"]"));
 
         // Tap the search button to get its focus
         searchButton.click();
